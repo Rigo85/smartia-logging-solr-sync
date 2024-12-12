@@ -53,6 +53,8 @@ schedule(
 			} finally {
 				isRunning = false;
 			}
+		} else {
+			logger.info("Ignoring execution, the previous run has not yet concluded.");
 		}
 	},
 	{
