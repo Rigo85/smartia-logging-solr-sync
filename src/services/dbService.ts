@@ -1,17 +1,16 @@
 import { Pool } from "pg";
 import * as dotenv from "dotenv";
+import { strict as assert } from "assert";
 
 import { Logger } from "(src)/helpers/Logger";
+import { DbLog } from "(src)/helpers/headers";
 
 dotenv.config({path: ".env"});
 
 const logger = new Logger("DB Service");
 
 const databaseUrl = process.env.DATABASE_URL;
-
-if (!databaseUrl) {
-	throw new Error("The environment variable 'DATABASE_URL' is not defined.");
-}
+assert.ok(databaseUrl, "The environment variable 'DATABASE_URL' is not defined.");
 
 const pool = new Pool({
 	connectionString: databaseUrl,
@@ -26,6 +25,59 @@ async function executeQuery(query: string, values: any[]): Promise<any> {
 		return rows;
 	} catch (error) {
 		logger.error("executeQuery", {query, values, error});
+
+		return undefined;
+	}
+}
+
+export async function getNonIndexed(): Promise<DbLog[]> {
+	try {
+		const query = `SELECT l.id, l.timestamp, l.data, l.source, l.hostname, l.appname
+                       FROM smartia_logs l
+                       WHERE l.isindexed = false
+                       ORDER BY l.id LIMIT 2000
+		`;
+		const rows = await executeQuery(query, []);
+
+		if (!rows) {
+			logger.error("getNonIndexed: executing query.");
+		} else if (!rows?.length) {
+			logger.info("getNonIndexed: Non indexed logs not found.");
+		}
+
+		return rows || [];
+	} catch (error) {
+		logger.error("getNonIndexed", error.message);
+
+		return [];
+	}
+}
+
+export async function updateIndexedLogs(ids: number[]): Promise<number[]> {
+	const from = ids?.length ? ids[0] : "<empty ids>";
+	const to = ids?.length ? ids[ids.length - 1] : "<empty ids>";
+
+	logger.info(`updateIndexedLogs: "${ids.length}" logs, from "${from}" to "${to}".`);
+
+	try {
+		const query = `
+            UPDATE smartia_logs
+            SET isindexed = true
+            WHERE id = ANY ($1) RETURNING *`;
+
+		const values = [ids];
+		const rows = await executeQuery(query, values);
+		if (!rows?.length) {
+			logger.error(`updateIndexedLogs: Updating indexed "${ids.length}" logs, from "${from}" to "${to}".`);
+
+			return undefined;
+		}
+
+		logger.info(`Updated "${ids.length}" logs, from "${from}" to "${to}".`);
+
+		return rows;
+	} catch (error) {
+		logger.error(`updateIndexedLogs: from "${from}" to "${to}: `, error.message);
 
 		return undefined;
 	}

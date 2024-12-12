@@ -37,6 +37,7 @@
         "lusca": "^1.7.0",
         "module-alias": "^2.2.3",
         "moment-timezone": "^0.5.45",
+        "node-cron": "^3.0.3",
         "pg": "^8.11.3"
     },
     "devDependencies": {

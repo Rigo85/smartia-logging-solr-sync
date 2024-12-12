@@ -13,7 +13,8 @@ import moment from "moment-timezone";
 
 import { AppRoutes } from "./routes";
 import { Logger } from "(src)/helpers/Logger";
-import * as process from "node:process"; // Routes file
+import * as process from "node:process";
+import { synchronize } from "(src)/services/syncService";
 
 const logger = new Logger("App");
 
@@ -38,6 +39,25 @@ AppRoutes.forEach(route => {
 	});
 });
 
-// todo llamar el interval.
+let isRunning = false;
+schedule(
+	process.env.CRON_SCHEDULE || "*/1 * * * *",
+	async () => {
+		logger.info(`Executing synchronization cron at ${moment(new Date()).tz("America/Lima").format("LLLL")}`);
+		if (!isRunning) {
+			isRunning = true;
+			try {
+				await synchronize();
+			} catch (error) {
+				logger.error(error);
+			} finally {
+				isRunning = false;
+			}
+		}
+	},
+	{
+		timezone: "America/Lima"
+	}
+);
 
 export { app };
