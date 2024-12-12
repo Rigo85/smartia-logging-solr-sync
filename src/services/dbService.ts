@@ -4,6 +4,7 @@ import { strict as assert } from "assert";
 
 import { Logger } from "(src)/helpers/Logger";
 import { DbLog } from "(src)/helpers/headers";
+import * as process from "node:process";
 
 dotenv.config({path: ".env"});
 
@@ -11,6 +12,8 @@ const logger = new Logger("DB Service");
 
 const databaseUrl = process.env.DATABASE_URL;
 assert.ok(databaseUrl, "The environment variable 'DATABASE_URL' is not defined.");
+const logsLimit = process.env.LOGS_LIMIT;
+assert.ok(logsLimit, "The environment variable 'LOGS_LIMIT' is not defined.");
 
 const pool = new Pool({
 	connectionString: databaseUrl,
@@ -35,7 +38,7 @@ export async function getNonIndexed(): Promise<DbLog[]> {
 		const query = `SELECT l.id, l.timestamp, l.data, l.source, l.hostname, l.appname
                        FROM smartia_logs l
                        WHERE l.isindexed = false
-                       ORDER BY l.id LIMIT 2000
+                       ORDER BY l.id LIMIT ${logsLimit}
 		`;
 		const rows = await executeQuery(query, []);
 
