@@ -35,7 +35,7 @@ export async function getNonIndexed(): Promise<DbLog[]> {
 		const query = `SELECT l.id, l.timestamp, l.data, l.source, l.hostname, l.appname
                        FROM smartia_logs l
                        WHERE l.isindexed = false
-                       ORDER BY l.id LIMIT 1000
+                       ORDER BY l.id LIMIT 2000
 		`;
 		const rows = await executeQuery(query, []);
 
