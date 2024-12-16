@@ -52,6 +52,8 @@ async function indexDocsIntoSolr(logs: DbLog[]): Promise<boolean> {
 			id: log.id.toString(),
 			timestamp: log.timestamp.toISOString(),
 			data: log.data,
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			data_exact: log.data,
 			source: log.source,
 			hostname: log.hostname,
 			appname: log.appname
