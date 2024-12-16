@@ -13,6 +13,9 @@ const username = process.env.SOLR_USERNAME;
 assert.ok(username, "The environment variable 'SOLR_USERNAME' is not defined.");
 const password = process.env.SOLR_PASSWORD;
 assert.ok(password, "The environment variable 'SOLR_PASSWORD' is not defined.");
+const fragmentLimitStr = process.env.FRAGMENT_LIMIT;
+assert.ok(fragmentLimitStr, "The environment variable 'FRAGMENT_LIMIT' is not defined.");
+const fragmentLimit = parseInt(fragmentLimitStr, 10);
 
 const logger = new Logger("Sync Service");
 
@@ -53,12 +56,12 @@ async function indexDocsIntoSolr(logs: DbLog[]): Promise<boolean> {
 			(log: DbLog) => {
 				const groupId = uuidv4();
 				const fragments = [] as any[];
-				for (let i = 0; i < log.data.length; i += 10000) {
+				for (let i = 0; i < log.data.length; i += fragmentLimit) {
 					fragments.push({
 						id: log.id.toString(),
 						timestamp: log.timestamp.toISOString(),
 						// eslint-disable-next-line @typescript-eslint/naming-convention
-						data_exact: log.data.slice(i, i + 10000),
+						data_exact: log.data.slice(i, i + fragmentLimit),
 						data: log.data,
 						source: log.source,
 						hostname: log.hostname,
