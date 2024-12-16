@@ -49,16 +49,6 @@ async function indexDocsIntoSolr(logs: DbLog[]): Promise<boolean> {
 	logger.info(`indexDocsIntoSolr: indexing "${logs.length}" documents, from "${from}" to "${to}".`);
 
 	try {
-		// const docs = logs.map((log: DbLog) => ({
-		// 	id: log.id.toString(),
-		// 	timestamp: log.timestamp.toISOString(),
-		// 	data: log.data,
-		// 	// eslint-disable-next-line @typescript-eslint/naming-convention
-		// 	data_exact: log.data,
-		// 	source: log.source,
-		// 	hostname: log.hostname,
-		// 	appname: log.appname
-		// }));
 		const docs = logs.flatMap(
 			(log: DbLog) => {
 				const groupId = uuidv4();
@@ -67,9 +57,9 @@ async function indexDocsIntoSolr(logs: DbLog[]): Promise<boolean> {
 					fragments.push({
 						id: log.id.toString(),
 						timestamp: log.timestamp.toISOString(),
-						data: log.data.slice(i, i + 10000),
 						// eslint-disable-next-line @typescript-eslint/naming-convention
-						data_exact: log.data,
+						data_exact: log.data.slice(i, i + 10000),
+						data: log.data,
 						source: log.source,
 						hostname: log.hostname,
 						appname: log.appname,
