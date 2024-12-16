@@ -1,6 +1,7 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import * as process from "node:process";
 import { strict as assert } from "assert";
+import { v4 as uuidv4 } from "uuid";
 
 import { Logger } from "(src)/helpers/Logger";
 import { getNonIndexed, updateIndexedLogs } from "(src)/services/dbService";
@@ -48,16 +49,38 @@ async function indexDocsIntoSolr(logs: DbLog[]): Promise<boolean> {
 	logger.info(`indexDocsIntoSolr: indexing "${logs.length}" documents, from "${from}" to "${to}".`);
 
 	try {
-		const docs = logs.map((log: DbLog) => ({
-			id: log.id.toString(),
-			timestamp: log.timestamp.toISOString(),
-			data: log.data,
-			// eslint-disable-next-line @typescript-eslint/naming-convention
-			data_exact: log.data,
-			source: log.source,
-			hostname: log.hostname,
-			appname: log.appname
-		}));
+		// const docs = logs.map((log: DbLog) => ({
+		// 	id: log.id.toString(),
+		// 	timestamp: log.timestamp.toISOString(),
+		// 	data: log.data,
+		// 	// eslint-disable-next-line @typescript-eslint/naming-convention
+		// 	data_exact: log.data,
+		// 	source: log.source,
+		// 	hostname: log.hostname,
+		// 	appname: log.appname
+		// }));
+		const docs = logs.flatMap(
+			(log: DbLog) => {
+				const groupId = uuidv4();
+				const fragments = [] as any[];
+				for (let i = 0; i < log.data.length; i += 10000) {
+					fragments.push({
+						id: log.id.toString(),
+						timestamp: log.timestamp.toISOString(),
+						data: log.data.slice(i, i + 10000),
+						// eslint-disable-next-line @typescript-eslint/naming-convention
+						data_exact: log.data,
+						source: log.source,
+						hostname: log.hostname,
+						appname: log.appname,
+						// eslint-disable-next-line @typescript-eslint/naming-convention
+						group_id: groupId
+					});
+				}
+
+				return fragments;
+			}
+		);
 
 		const options: AxiosRequestConfig = {
 			method: "POST",

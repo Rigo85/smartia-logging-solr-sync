@@ -6,4 +6,5 @@ export interface DbLog {
 	hostname: string;
 	appname: string;
 	isindexed: boolean;
+
 }
