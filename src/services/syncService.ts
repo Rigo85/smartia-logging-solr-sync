@@ -59,7 +59,8 @@ async function indexDocsIntoSolr(logs: DbLog[]): Promise<boolean> {
 				for (let i = 0; i < log.data.length; i += fragmentLimit) {
 					fragments.push({
 						id: log.id.toString(),
-						timestamp: log.timestamp.toISOString(),
+						// timestamp: log.timestamp.toISOString(),
+						timestamp: log.timestamp.getTime(),
 						// eslint-disable-next-line @typescript-eslint/naming-convention
 						data_exact: log.data.slice(i, i + fragmentLimit),
 						data: log.data,
