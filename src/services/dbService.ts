@@ -17,7 +17,9 @@ assert.ok(logsLimit, "The environment variable 'LOGS_LIMIT' is not defined.");
 
 const pool = new Pool({
 	connectionString: databaseUrl,
-	// ssl: process.env.NODE_ENV === "production" ? {rejectUnauthorized: false} : false
+	max: 10,
+	idleTimeoutMillis: 30_000,
+	connectionTimeoutMillis: 5_000,
 	ssl: false
 });
 
@@ -38,9 +40,9 @@ export async function getNonIndexed(): Promise<DbLog[]> {
 		const query = `SELECT l.id, l.timestamp, l.data, l.source, l.hostname, l.appname
                        FROM smartia_logs l
                        WHERE l.isindexed = false
-                       ORDER BY l.id LIMIT ${logsLimit}
+                       ORDER BY l.id LIMIT $1
 		`;
-		const rows = await executeQuery(query, []);
+		const rows = await executeQuery(query, [parseInt(logsLimit, 10)]);
 
 		if (!rows) {
 			logger.error("getNonIndexed: executing query.");
